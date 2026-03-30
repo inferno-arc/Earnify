@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Earnify</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .auth-screen { display: flex; flex-direction: column; justify-content: center; min-height: 100vh; padding: 30px; }
+        input { 
+            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); 
+            padding: 15px; border-radius: 12px; color: white; margin-bottom: 15px; outline: none;
+        }
+        input:focus { border-color: #38bdf8; background: rgba(255,255,255,0.1); }
+        .error-msg { color: #ff4d4d; font-size: 0.8rem; margin-bottom: 10px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="auth-screen">
+        <h1 style="background: var(--primary-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Create Account</h1>
+        <p style="color: #94a3b8; margin-bottom: 30px;">Start earning real cash today!</p>
+
+        <div class="card">
+            <div id="reg-error" class="error-msg"></div>
+            <input type="text" id="reg-user" placeholder="Full Name">
+            <input type="number" id="reg-phone" placeholder="10-Digit Phone Number">
+            <input type="email" id="reg-email" placeholder="Email Address">
+            <input type="password" id="reg-pass" placeholder="Password (Min. 6 chars)">
+            <input type="text" id="reg-ref" placeholder="Referral Code (Optional)">
+            
+            <button class="btn-primary" onclick="validateAndRegister()">Create Account</button>
+        </div>
+
+        <p style="text-align: center; color: #94a3b8;">Already have an account? <a href="login.html" style="color: #38bdf8; text-decoration: none;">Login</a></p>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        function validateAndRegister() {
+            const user = document.getElementById('reg-user').value;
+            const phone = document.getElementById('reg-phone').value;
+            const email = document.getElementById('reg-email').value;
+            const pass = document.getElementById('reg-pass').value;
+            const refInput = document.getElementById('reg-ref').value;
+            const errorDiv = document.getElementById('reg-error');
+
+            let users = JSON.parse(localStorage.getItem('earnify_users')) || [];
+
+            // 1. Check if empty
+            if(!user || !phone || !email || !pass) {
+                showError("Please fill all required fields.");
+                return;
+            }
+            // 2. Phone Validation (10 digits)
+            if(phone.length !== 10) {
+                showError("Enter a valid 10-digit phone number.");
+                return;
+            }
+            // 3. Email Validation
+            if(!email.includes("@") || !email.includes(".")) {
+                showError("Enter a valid email address.");
+                return;
+            }
+            // 4. Password Length
+            if(pass.length < 6) {
+                showError("Password must be at least 6 characters.");
+                return;
+            }
+            // 5. Duplicate Check
+            if(users.some(u => u.phone === phone || u.email === email)) {
+                showError("Phone or Email already registered!");
+                return;
+            }
+
+            // SUCCESS: Save Data
+            const newUser = {
+                username: user,
+                phone: phone,
+                email: email,
+                pass: pass,
+                refCode: "EF" + Math.floor(Math.random() * 8999 + 1000),
+                coins: refInput ? 100 : 0 // Bonus if ref code used
+            };
+
+            // Referral Bonus logic: If user enters a valid ref code, give that person coins too
+            if(refInput) {
+                let luckyFriend = users.find(u => u.refCode === refInput);
+                if(luckyFriend) luckyFriend.coins += 100;
+            }
+
+            users.push(newUser);
+            localStorage.setItem('earnify_users', JSON.stringify(users));
+            alert("Registration Successful! Now Login.");
+            window.location.href = 'login.html';
+        }
+
+        function showError(msg) {
+            const err = document.getElementById('reg-error');
+            err.innerText = msg;
+            err.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
